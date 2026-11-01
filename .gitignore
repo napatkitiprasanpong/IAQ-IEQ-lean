@@ -1,0 +1,22 @@
+# Gradle / build output
+.gradle/
+build/
+/captures
+.externalNativeBuild
+.cxx
+
+# Machine-specific (contains your Android SDK path)
+local.properties
+
+# Android Studio / IntelliJ
+.idea/
+*.iml
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Signing + private deployment info: never commit these
+*.jks
+*.keystore
+url.txt

@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <!-- AI/voice bridge: only apps signed with the same key (MatePet) get this -->
+    <permission android:name="${applicationId}.permission.BRIDGE" android:protectionLevel="signature" />
+
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <!-- Start the app by itself when the tablet boots (Settings > "Start this app automatically when temi starts") -->
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+
+    <application
+        android:allowBackup="true"
+        android:dataExtractionRules="@xml/data_extraction_rules"
+        android:fullBackupContent="@xml/backup_rules"
+        android:icon="@mipmap/ic_launcher"
+        android:label="@string/app_name"
+        android:roundIcon="@mipmap/ic_launcher_round"
+        android:supportsRtl="true"
+        android:theme="@style/Theme.IAQIEQMornitoring">
+
+        <!-- Required so the app shows up in temi's launcher / app list -->
+        <meta-data
+            android:name="com.robotemi.sdk.metadata.SKILL"
+            android:value="@string/app_name" />
+
+        <receiver
+            android:name=".BootReceiver"
+            android:enabled="true"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+                <action android:name="android.intent.action.QUICKBOOT_POWERON" />
+            </intent-filter>
+        </receiver>
+
+        <receiver
+            android:name=".bridge.IaqCommandReceiver"
+            android:exported="true"
+            android:permission="${applicationId}.permission.BRIDGE">
+            <intent-filter>
+                <action android:name="${applicationId}.action.COMMAND" />
+            </intent-filter>
+        </receiver>
+
+        <provider
+            android:name=".bridge.IaqStatusProvider"
+            android:authorities="${applicationId}.bridge"
+            android:exported="true"
+            android:readPermission="${applicationId}.permission.BRIDGE" />
+
+        <activity
+            android:name=".MainActivity"
+            android:exported="true"
+            android:label="@string/app_name"
+            android:theme="@style/Theme.IAQIEQMornitoring">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+    </application>
+
+</manifest>
