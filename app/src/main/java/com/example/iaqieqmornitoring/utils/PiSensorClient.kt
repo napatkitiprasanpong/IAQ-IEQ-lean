@@ -25,7 +25,7 @@ import java.util.UUID
  *   - JSON object:  {"temp":24.1,"humidity":55,"co2":620,"pm25":9,"pm10":14,"tvoc":0.2,"hcho":0.02,"light":310,"sound":42}
  *     (missing keys keep their previous value; see [SensorPayload] for accepted key names, and a
  *      nested "sensors" / "data" object is also accepted)
- *   - plain number on a per-sensor topic such as iaq/sensors/co2 (use topic "iaq/sensors/#")
+ *   - plain number on a per-sensor topic such as pi/01/telemetry/iaq/co2 (use topic "pi/01/telemetry/iaq/#")
  */
 object PiSensorClient {
 

@@ -38,8 +38,8 @@ fun Sidebar(nav: NavController) {
 
         SidebarItem("home", "Home", Icons.Default.Home, currentRoute, nav)
         SidebarItem("analytics", "Analytics", Icons.Default.BarChart, currentRoute, nav)
-        SidebarItem("mission", "Mission", Icons.Default.Navigation, currentRoute, nav)
         SidebarItem("routine", "Routine", Icons.Default.Schedule, currentRoute, nav)
+        SidebarItem("map", "Map", Icons.Default.Map, currentRoute, nav)
         SidebarItem("settings", "Settings", Icons.Default.Settings, currentRoute, nav)
     }
 }

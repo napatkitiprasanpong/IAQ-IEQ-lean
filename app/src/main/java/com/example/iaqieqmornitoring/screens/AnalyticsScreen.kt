@@ -1,235 +1,113 @@
 package com.example.iaqieqmornitoring.screens
 
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.runtime.*
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.*
-import androidx.compose.material3.*
-import androidx.compose.ui.*
-import androidx.compose.ui.graphics.*
-import androidx.compose.ui.graphics.drawscope.Stroke
-import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.material.icons.filled.Air
+import androidx.compose.material.icons.filled.Biotech
+import androidx.compose.material.icons.filled.Cloud
+import androidx.compose.material.icons.filled.GraphicEq
+import androidx.compose.material.icons.filled.LightMode
+import androidx.compose.material.icons.filled.Science
+import androidx.compose.material.icons.filled.Thermostat
+import androidx.compose.material.icons.filled.WaterDrop
+import androidx.compose.material.icons.filled.WindPower
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.Icon
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.PathEffect
+import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.StrokeJoin
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.*
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
-import com.example.iaqieqmornitoring.components.*
+import com.example.iaqieqmornitoring.components.ActionButton
+import com.example.iaqieqmornitoring.components.ColorAccent
+import com.example.iaqieqmornitoring.components.ColorMuted
+import com.example.iaqieqmornitoring.components.Sidebar
+import com.example.iaqieqmornitoring.components.TopBar
 import com.example.iaqieqmornitoring.utils.IAQConfig
 import com.example.iaqieqmornitoring.utils.SensorData
-import com.example.iaqieqmornitoring.utils.SensorItem
-import com.example.iaqieqmornitoring.utils.SensorRepository
+import com.example.iaqieqmornitoring.utils.SensorHistory
+import com.example.iaqieqmornitoring.utils.calculateIAQPercentage
+import com.example.iaqieqmornitoring.utils.getColorFromLevel
+import com.example.iaqieqmornitoring.utils.getLevelFromScore
+import kotlin.math.max
+import kotlin.math.min
 
-// ==========================
-// 🔥 GRAPH GRID (ใช้ค่าจริง)
-// ==========================
-@Composable
-fun AnalyticsGraphGrid(navController: NavController) {
-
-    val sensor by SensorRepository.data.collectAsState()
-
-    Column(
-        verticalArrangement = Arrangement.spacedBy(20.dp),
-        modifier = Modifier.fillMaxWidth()
-    ) {
-
-        Row(horizontalArrangement = Arrangement.spacedBy(20.dp)) {
-            GraphCard("Temperature", Color.Red, sensor.temp, Icons.Default.Thermostat, navController, Modifier.weight(1f))
-            GraphCard("Humidity", Color.Yellow, sensor.humidity, Icons.Default.WaterDrop, navController, Modifier.weight(1f))
-            GraphCard("CO2", Color.Yellow, sensor.co2, Icons.Default.Cloud, navController, Modifier.weight(1f))
-        }
-
-        Row(horizontalArrangement = Arrangement.spacedBy(20.dp)) {
-            GraphCard("PM2.5", Color.Cyan, sensor.pm25, Icons.Default.Air, navController, Modifier.weight(1f))
-            GraphCard("PM10", Color.Green, sensor.pm10, Icons.Default.WindPower, navController, Modifier.weight(1f))
-            GraphCard("TVOC", Color.Green, sensor.tvoc, Icons.Default.Science, navController, Modifier.weight(1f))
-        }
-
-        Row(horizontalArrangement = Arrangement.spacedBy(20.dp)) {
-            GraphCard("HCHO", Color.Cyan, sensor.hcho, Icons.Default.Biotech, navController, Modifier.weight(1f))
-            GraphCard("Light", Color.Red, sensor.light, Icons.Default.LightMode, navController, Modifier.weight(1f))
-            GraphCard("Sound", Color(0xFFFF9800), sensor.sound, Icons.Default.GraphicEq, navController, Modifier.weight(1f))
-        }
-    }
-}
-
-// ==========================
-// 🔥 GRAPH CARD (ใช้ history)
-// ==========================
-@Composable
-fun GraphCard(
-    title: String,
-    lineColor: Color,
-    value: Float,
-    icon: ImageVector,
-    navController: NavController,
-    modifier: Modifier = Modifier
-) {
-
-    val points = remember { mutableStateListOf<Float>() }
-
-    // เก็บ history
-    LaunchedEffect(value) {
-        if (points.size >= 30) points.removeAt(0)
-        points.add(value)
-    }
-
-    Card(
-        modifier = modifier
-            .height(150.dp)
-            .clickable {
-                navController.navigate("detail/$title")
-            },
-        shape = RoundedCornerShape(18.dp),
-        colors = CardDefaults.cardColors(containerColor = Color(0xFF0B1220))
-    ) {
-
-        Box(modifier = Modifier.fillMaxSize()) {
-
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(14.dp)
-            ) {
-
-                // 🔹 Header
-                Row(verticalAlignment = Alignment.CenterVertically) {
-
-                    Icon(
-                        icon,
-                        contentDescription = title,
-                        tint = lineColor,
-                        modifier = Modifier.size(18.dp)
-                    )
-
-                    Spacer(modifier = Modifier.width(6.dp))
-
-                    Text(
-                        title,
-                        color = Color.White,
-                        fontSize = 14.sp
-                    )
-                }
-
-                Spacer(modifier = Modifier.height(10.dp))
-
-                // 🔹 Graph
-                Canvas(modifier = Modifier.fillMaxSize()) {
-
-                    if (points.size < 2) return@Canvas
-
-                    val max = points.maxOrNull() ?: 1f
-                    val min = points.minOrNull() ?: 0f
-                    val range = (max - min).takeIf { it != 0f } ?: 1f
-
-                    val stepX = size.width / (points.size - 1)
-
-                    val path = Path()
-
-                    points.forEachIndexed { i, v ->
-                        val x = i * stepX
-
-                        val normalized = (v - min) / range
-
-                        val y = size.height - (normalized * size.height * 0.8f + 10f)
-
-                        if (i == 0) path.moveTo(x, y)
-                        else path.lineTo(x, y)
-                    }
-
-                    // 🔥 glow
-                    drawPath(
-                        path,
-                        lineColor.copy(alpha = 0.15f),
-                        style = Stroke(width = 12f, cap = StrokeCap.Round)
-                    )
-
-                    // 🔥 main line
-                    drawPath(
-                        path,
-                        lineColor,
-                        style = Stroke(width = 4f, cap = StrokeCap.Round)
-                    )
-                }
-
-                Spacer(modifier = Modifier.height(6.dp))
-
-                // 🔹 Value text
-                Text(
-                    text = String.format("%.1f", value),
-                    color = lineColor,
-                    fontSize = 12.sp
-                )
-            }
-
-            // 🔴 status dot (มุมขวาบน)
-            Box(
-                modifier = Modifier
-                    .padding(10.dp)
-                    .size(8.dp)
-                    .background(lineColor, CircleShape)
-                    .align(Alignment.TopEnd)
-            )
-        }
-    }
-}
-
+/** CO2, PM and the other "less is better" sensors (the others score best in the middle of their range). */
 fun isLowGood(title: String): Boolean {
     return when (title) {
         "CO2", "PM2.5", "PM10", "TVOC", "HCHO" -> true
         else -> false
     }
 }
-// ==========================
-// 🔥 VALUE GRID (แก้แล้ว)
-// ==========================
-@Composable
-fun AnalyticsGrid(
-    temp: Float,
-    humidity: Float,
-    co2: Float,
-    pm25: Float,
-    pm10: Float,
-    tvoc: Float,
-    hcho: Float,
-    light: Float,
-    sound: Float
-) {
 
-    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+private class GraphSpec(
+    /** Key used for the IAQ breakpoints and for the detail screen. */
+    val key: String,
+    val title: String,
+    val unit: String,
+    val color: Color,
+    val icon: ImageVector,
+    val decimals: Int,
+    val pick: (SensorData) -> Float
+)
 
-        Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-            MiniGaugeCard("TEMP", temp, "°C", IAQConfig.getMinMaxRange("TEMP"), Modifier.weight(1f))
-            MiniGaugeCard("HUMIDITY", humidity, "%", IAQConfig.getMinMaxRange("HUMIDITY"), Modifier.weight(1f))
-            MiniGaugeCard("CO2", co2, "ppm", IAQConfig.getMinMaxRange("CO2"), Modifier.weight(1f))
-        }
+private val GRAPHS = listOf(
+    GraphSpec("TEMP", "Temperature", "°C", Color(0xFFFF6B6B), Icons.Default.Thermostat, 1) { it.temp },
+    GraphSpec("HUMIDITY", "Humidity", "%", Color(0xFF4DABF7), Icons.Default.WaterDrop, 0) { it.humidity },
+    GraphSpec("CO2", "CO₂", "ppm", Color(0xFFFFD43B), Icons.Default.Cloud, 0) { it.co2 },
+    GraphSpec("PM2.5", "PM2.5", "µg/m³", Color(0xFF22C1DC), Icons.Default.Air, 1) { it.pm25 },
+    GraphSpec("PM10", "PM10", "µg/m³", Color(0xFF69DB7C), Icons.Default.WindPower, 1) { it.pm10 },
+    GraphSpec("TVOC", "TVOC", "mg/m³", Color(0xFFB197FC), Icons.Default.Science, 2) { it.tvoc },
+    GraphSpec("HCHO", "HCHO", "mg/m³", Color(0xFFF783AC), Icons.Default.Biotech, 3) { it.hcho },
+    GraphSpec("LIGHT", "Light", "lux", Color(0xFFFFA94D), Icons.Default.LightMode, 0) { it.light },
+    GraphSpec("SOUND", "Sound", "dB", Color(0xFF63E6BE), Icons.Default.GraphicEq, 1) { it.sound }
+)
 
-        Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-            MiniGaugeCard("PM2.5", pm25, "µg/m³", IAQConfig.getMinMaxRange("PM2.5"), Modifier.weight(1f))
-            MiniGaugeCard("PM10", pm10, "µg/m³", IAQConfig.getMinMaxRange("PM10"), Modifier.weight(1f))
-            MiniGaugeCard("TVOC", tvoc, "mg/m³", IAQConfig.getMinMaxRange("TVOC"), Modifier.weight(1f))
-        }
+private val RANGES = listOf("1 min" to 60_000L, "5 min" to 300_000L, "15 min" to 900_000L, "1 hour" to SensorHistory.MAX_AGE_MS)
 
-        Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-            MiniGaugeCard("HCHO", hcho, "mg/m³", IAQConfig.getMinMaxRange("HCHO"), Modifier.weight(1f))
-            MiniGaugeCard("LIGHT", light, "lux", IAQConfig.getMinMaxRange("LIGHT"), Modifier.weight(1f))
-            MiniGaugeCard("SOUND", sound, "dB", IAQConfig.getMinMaxRange("SOUND"), Modifier.weight(1f))
-        }
-    }
-}
-
-// ==========================
-// 🔥 MAIN SCREEN
-// ==========================
 @Composable
 fun AnalyticsScreen(nav: NavController) {
 
-    val sensor by SensorRepository.data.collectAsState()
+    val history by SensorHistory.snapshot.collectAsState()
+    var rangeIndex by remember { mutableStateOf(1) }
+    val rangeMs = RANGES[rangeIndex].second
+
+    // Only the readings inside the chosen window, measured from the newest reading.
+    val newest = history.lastOrNull()?.timestampMs ?: 0L
+    val window = history.filter { it.timestampMs >= newest - rangeMs }
 
     Column(
         modifier = Modifier
@@ -246,96 +124,156 @@ fun AnalyticsScreen(nav: NavController) {
             Column(
                 modifier = Modifier
                     .weight(1f)
-                    .padding(20.dp)
+                    .verticalScroll(rememberScrollState())
+                    .padding(20.dp),
+                verticalArrangement = Arrangement.spacedBy(14.dp)
             ) {
 
-                Text(
-                    text = "Analytics",
-                    color = Color.White,
-                    fontSize = 22.sp,
-                    fontWeight = FontWeight.Bold
-                )
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Column(Modifier.weight(1f)) {
+                        Text("Analytics", color = Color.White, fontSize = 22.sp, fontWeight = FontWeight.Bold)
+                        Text(
+                            "${window.size} readings · dashed lines are the IAQ breakpoints · tap a graph for details",
+                            color = ColorMuted, fontSize = 12.sp
+                        )
+                    }
+                    RANGES.forEachIndexed { i, r ->
+                        val on = i == rangeIndex
+                        Text(
+                            r.first,
+                            color = if (on) Color.White else ColorMuted,
+                            fontWeight = if (on) FontWeight.Bold else FontWeight.Normal,
+                            fontSize = 13.sp,
+                            modifier = Modifier
+                                .padding(start = 6.dp)
+                                .background(if (on) Color(0xFF2563EB) else Color(0xFF111827), RoundedCornerShape(10.dp))
+                                .clickable { rangeIndex = i }
+                                .padding(horizontal = 12.dp, vertical = 8.dp)
+                        )
+                    }
+                    Spacer(Modifier.width(10.dp))
+                    ActionButton("Clear", onClick = { SensorHistory.clear() }, color = Color(0xFF475569))
+                }
 
-                Spacer(modifier = Modifier.height(20.dp))
-
-                AnalyticsGrid(
-                    temp = sensor.temp,
-                    humidity = sensor.humidity,
-                    co2 = sensor.co2,
-                    pm25 = sensor.pm25,
-                    pm10 = sensor.pm10,
-                    tvoc = sensor.tvoc,
-                    hcho = sensor.hcho,
-                    light = sensor.light,
-                    sound = sensor.sound
-                )
+                GRAPHS.chunked(3).forEach { rowSpecs ->
+                    Row(horizontalArrangement = Arrangement.spacedBy(14.dp), modifier = Modifier.fillMaxWidth()) {
+                        rowSpecs.forEach { spec ->
+                            SensorGraphCard(spec, window, rangeMs, nav, Modifier.weight(1f))
+                        }
+                    }
+                }
             }
         }
     }
 }
 
 @Composable
-fun MiniGaugeCard(
-    title: String,
-    value: Float,
-    unit: String,
-    range: ClosedFloatingPointRange<Float>,
-    modifier: Modifier = Modifier
+private fun SensorGraphCard(
+    spec: GraphSpec,
+    window: List<SensorData>,
+    rangeMs: Long,
+    nav: NavController,
+    modifier: Modifier
 ) {
+    val values = window.map { spec.pick(it) }
+    val current = values.lastOrNull()
+    val lo = values.minOrNull()
+    val hi = values.maxOrNull()
+    val avg = if (values.isEmpty()) null else values.average().toFloat()
+    val breakpoints = IAQConfig.getRange(spec.key)
 
-    val percent = ((value - range.start) / (range.endInclusive - range.start))
-        .coerceIn(0f, 1f)
-
-    val color = when {
-        percent < 0.4 -> Color(0xFF00FFA3)
-        percent < 0.7 -> Color(0xFFFFEA00)
-        else -> Color(0xFFFF1744)
+    val valueColor = if (current == null) ColorMuted else {
+        val score = calculateIAQPercentage(current, breakpoints, isLowGood(spec.key))
+        getColorFromLevel(getLevelFromScore(score))
     }
+    fun fmt(v: Float?) = if (v == null) "–" else "%.${spec.decimals}f".format(v)
 
     Card(
-        modifier = modifier,
-        shape = RoundedCornerShape(16.dp),
+        modifier = modifier.clickable { nav.navigate("detail/${spec.key}") },
+        shape = RoundedCornerShape(18.dp),
         colors = CardDefaults.cardColors(containerColor = Color(0xFF0B1220))
     ) {
+        Column(Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
 
-        Column(
-            modifier = Modifier.padding(14.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
-
-            Text(title, color = Color.Gray, fontSize = 12.sp)
-
-            // 🔥 MINI GAUGE
-            Canvas(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(60.dp)
-            ) {
-
-                val stroke = 10f
-
-                drawArc(
-                    color = Color(0xFF1F2937),
-                    startAngle = 180f,
-                    sweepAngle = 180f,
-                    useCenter = false,
-                    style = Stroke(stroke)
-                )
-
-                drawArc(
-                    color = color,
-                    startAngle = 180f,
-                    sweepAngle = percent * 180f,
-                    useCenter = false,
-                    style = Stroke(stroke)
-                )
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Icon(spec.icon, contentDescription = spec.title, tint = spec.color, modifier = Modifier.size(18.dp))
+                Spacer(Modifier.width(6.dp))
+                Text(spec.title, color = Color.White, fontSize = 14.sp, modifier = Modifier.weight(1f))
+                Text(fmt(current), color = valueColor, fontSize = 20.sp, fontWeight = FontWeight.Bold)
+                Text(" ${spec.unit}", color = ColorMuted, fontSize = 11.sp)
             }
 
-            Text(
-                text = "${"%.2f".format(value)} $unit",
-                color = Color.White,
-                fontSize = 14.sp
-            )
+            Row(Modifier.fillMaxWidth().height(130.dp)) {
+                Column(Modifier.height(130.dp).width(40.dp), verticalArrangement = Arrangement.SpaceBetween) {
+                    Text(fmt(hi), color = ColorMuted, fontSize = 9.sp)
+                    Text(fmt(lo), color = ColorMuted, fontSize = 9.sp)
+                }
+                LineChart(values, spec.color, breakpoints, Modifier.weight(1f).height(130.dp))
+            }
+
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                Text("-" + RANGES.firstOrNull { it.second == rangeMs }?.first.orEmpty(), color = ColorMuted, fontSize = 9.sp)
+                Text("min ${fmt(lo)} · avg ${fmt(avg)} · max ${fmt(hi)}", color = ColorMuted, fontSize = 10.sp)
+                Text("now", color = ColorMuted, fontSize = 9.sp)
+            }
         }
+    }
+}
+
+/** A filled line chart that scales to the data; IAQ breakpoints inside the visible range are drawn dashed. */
+@Composable
+private fun LineChart(values: List<Float>, color: Color, breakpoints: List<Float>, modifier: Modifier) {
+    Canvas(modifier) {
+        // frame
+        drawLine(Color(0xFF1F2937), Offset(0f, size.height), Offset(size.width, size.height), 1f)
+        drawLine(Color(0xFF1F2937), Offset(0f, 0f), Offset(0f, size.height), 1f)
+        if (values.size < 2) return@Canvas
+
+        // Reduce to about one point per two pixels so a long history stays light to draw.
+        val maxPoints = max(2, (size.width / 2f).toInt())
+        val step = max(1, values.size / maxPoints)
+        val pts = ArrayList<Float>()
+        var i = 0
+        while (i < values.size) {
+            pts.add(values[i]); i += step
+        }
+        if (pts.last() != values.last()) pts.add(values.last())
+
+        var lo = pts.min()
+        var hi = pts.max()
+        if (hi - lo < 1e-6f) {
+            lo -= 0.5f; hi += 0.5f
+        }
+        val pad = (hi - lo) * 0.1f
+        lo -= pad; hi += pad
+        val range = hi - lo
+
+        fun y(v: Float) = size.height - (v - lo) / range * size.height
+        fun x(index: Int) = index * size.width / (pts.size - 1)
+
+        for (b in breakpoints) {
+            if (b in lo..hi) {
+                drawLine(
+                    Color(0x55FFFFFF), Offset(0f, y(b)), Offset(size.width, y(b)), 1f,
+                    pathEffect = PathEffect.dashPathEffect(floatArrayOf(6f, 6f))
+                )
+            }
+        }
+
+        val line = Path()
+        val fill = Path()
+        pts.forEachIndexed { idx, v ->
+            if (idx == 0) {
+                line.moveTo(x(idx), y(v)); fill.moveTo(x(idx), size.height); fill.lineTo(x(idx), y(v))
+            } else {
+                line.lineTo(x(idx), y(v)); fill.lineTo(x(idx), y(v))
+            }
+        }
+        fill.lineTo(x(pts.size - 1), size.height)
+        fill.close()
+
+        drawPath(fill, Brush.verticalGradient(listOf(color.copy(alpha = 0.30f), Color.Transparent)))
+        drawPath(line, color, style = Stroke(width = 3f, cap = StrokeCap.Round, join = StrokeJoin.Round))
+        drawCircle(color, 5f, Offset(x(pts.size - 1), y(pts.last())))
     }
 }

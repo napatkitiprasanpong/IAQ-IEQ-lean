@@ -10,7 +10,7 @@ Setup on the Pi (once):
     sudo systemctl restart mosquitto
 
 In the Android app: Settings -> Raspberry Pi Sensors -> host = the Pi's IP, port 1883,
-topic = iaq/sensors  ->  Save & Reconnect.
+topic = pi/01/telemetry/iaq  ->  Save & Reconnect.
 
 Replace the read_* functions with your real sensor code.
 """
@@ -21,7 +21,7 @@ import time
 import paho.mqtt.client as mqtt
 
 BROKER = "localhost"      # the broker runs on this Pi
-TOPIC = "iaq/sensors"
+TOPIC = "pi/01/telemetry/iaq"
 PERIOD_S = 2
 
 

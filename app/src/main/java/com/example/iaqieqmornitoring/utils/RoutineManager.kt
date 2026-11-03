@@ -141,6 +141,29 @@ object RoutineManager {
 
         // Mark it first, so a routine that cannot start is not retried every 10 seconds.
         markRan(due.id, day)
+
+        // Nobody is looking at the screen: predict the drive and do not leave if it looks blocked.
+        if (AppSettings.previewBlockAuto.value) {
+            scope.launch {
+                val preview = try {
+                    RoutePreviewer.buildForAutoStart(due.type.kind, due.routeName, true)
+                } catch (e: Exception) {
+                    null
+                }
+                if (preview != null && preview.hasBlocked) {
+                    val why = preview.legs.firstOrNull { it.status == LegStatus.BLOCKED }?.note.orEmpty()
+                    _state.update {
+                        it.copy(
+                            error = "\"${due.name}\" was not started: the predicted route is blocked. $why",
+                            log = (it.log + RoutineLogEntry(System.currentTimeMillis(), "${due.name} skipped: predicted route blocked. $why")).takeLast(40)
+                        )
+                    }
+                } else {
+                    begin(due)
+                }
+            }
+            return
+        }
         begin(due)
     }
 

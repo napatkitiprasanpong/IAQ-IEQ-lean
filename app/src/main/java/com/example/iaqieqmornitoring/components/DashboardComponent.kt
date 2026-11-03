@@ -31,6 +31,9 @@ import androidx.compose.material3.Text
 import com.example.iaqieqmornitoring.utils.IAQConfig
 import com.example.iaqieqmornitoring.utils.AppSettings
 import com.example.iaqieqmornitoring.utils.MissionManager
+import com.example.iaqieqmornitoring.utils.PendingStart
+import com.example.iaqieqmornitoring.utils.StartGate
+import com.example.iaqieqmornitoring.utils.StartKind
 import com.example.iaqieqmornitoring.utils.MissionStatus
 import com.example.iaqieqmornitoring.utils.TemiRepository
 import androidx.compose.ui.text.style.TextOverflow
@@ -85,7 +88,7 @@ fun MissionPanel(
             Column {
 
                 Text(
-                    "Mission Control",
+                    "Sudden Mission",
                     color = Color.White,
                     fontSize = 18.sp,
                     fontWeight = FontWeight.Bold
@@ -151,7 +154,13 @@ fun MissionPanel(
                     if (running) {
                         MissionManager.stop()
                     } else if (route != null) {
-                        MissionManager.start(route.name)
+                        // Shows the predicted route on the map first; the mission starts when it is confirmed.
+                        val name = route.name
+                        StartGate.request(
+                            PendingStart(StartKind.SUDDEN, "Sudden mission", name, AppSettings.returnHome.value) {
+                                MissionManager.start(name)
+                            }
+                        )
                         onStartMission()
                     }
                 },
@@ -167,7 +176,7 @@ fun MissionPanel(
             ) {
 
                 Text(
-                    text = if (running) "Stop Mission" else "Start Mission",
+                    text = if (running) "Stop Mission" else "Preview & Start",
                     fontWeight = FontWeight.Bold,
                     color = if (running || canStart) Color.White else Color.Gray
                 )

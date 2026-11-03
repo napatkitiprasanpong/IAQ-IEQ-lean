@@ -11,7 +11,9 @@ import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.unit.*
 import androidx.navigation.NavController
 import com.example.iaqieqmornitoring.components.MiniGauge
+import com.example.iaqieqmornitoring.utils.SensorHistory
 import com.example.iaqieqmornitoring.utils.SensorRepository
+import com.example.iaqieqmornitoring.utils.valueOf
 
 @Composable
 fun DetailScreen(
@@ -34,16 +36,13 @@ fun DetailScreen(
         else -> 0f
     }
 
-    val history = remember { mutableStateListOf<Float>() }
-
-    LaunchedEffect(value) {
-        if (history.size >= 60) history.removeAt(0)
-        history.add(value)
-    }
+    // The last readings come from the app-wide history, so the graph is not empty when this screen opens.
+    val all by SensorHistory.snapshot.collectAsState()
+    val history = remember(all, sensorName) { all.takeLast(300).mapNotNull { it.valueOf(sensorName) } }
 
     val min = history.minOrNull() ?: value
     val max = history.maxOrNull() ?: value
-    val avg = history.average().toFloat()
+    val avg = if (history.isEmpty()) value else history.average().toFloat()
 
     Column(
         modifier = Modifier

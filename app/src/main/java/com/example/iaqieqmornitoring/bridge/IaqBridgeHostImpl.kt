@@ -6,7 +6,7 @@ import org.json.JSONObject
 
 class IaqBridgeHostImpl : IaqBridgeHost {
     private val tabs = mapOf(
-        "dashboard" to "home", "analytics" to "analytics", "mission" to "mission", "routine" to "routine",
+        "dashboard" to "home", "analytics" to "analytics", "mission" to "routine", "routine" to "routine", "map" to "map",
         "settings" to "settings", "startup" to "startup")
 
     private fun clean(s: String?) = s?.lowercase()?.trim()?.removePrefix("the ")?.trim()
@@ -19,7 +19,11 @@ class IaqBridgeHostImpl : IaqBridgeHost {
         else routes.firstOrNull { it.name.equals(q, true) }
             ?: routes.firstOrNull { it.name.lowercase().contains(q) || q.contains(it.name.lowercase()) }
             ?: return "I can't find a route called $route. Routes are: ${routes.joinToString { it.name }}."
-        return MissionManager.start(r.name) ?: "Starting mission on ${r.name}."
+        BridgeNav.request("routine")
+        StartGate.request(PendingStart(StartKind.SUDDEN, "Sudden mission", r.name, AppSettings.returnHome.value) {
+            MissionManager.start(r.name)
+        })
+        return "Here is the route for ${r.name}. Say yes to start, or no to cancel."
     }
 
     override fun stopMission(): String =
@@ -33,7 +37,9 @@ class IaqBridgeHostImpl : IaqBridgeHost {
         else rs.firstOrNull { it.name.equals(q, true) } ?: rs.firstOrNull { it.name.lowercase().contains(q) }
             ?: return "I can't find a routine called $name."
         val label = r.name.ifBlank { "%02d:%02d".format(r.hour, r.minute) }
-        return RoutineManager.runNow(r.id) ?: "Starting routine $label."
+        BridgeNav.request("routine")
+        StartGate.request(PendingStart(r.type.kind, label, r.routeName, true) { RoutineManager.runNow(r.id) })
+        return "Here is the route for $label. Say yes to start, or no to cancel."
     }
 
     override fun stopRoutine(): String =
@@ -46,8 +52,12 @@ class IaqBridgeHostImpl : IaqBridgeHost {
 
     /** Answers the routine popup ("Please drink water" -> Yes / Come back in N mins) by voice. */
     override fun answer(a: String): String {
-        if (RoutineManager.prompt.value == null) return "There is no question waiting."
         val yes = a.lowercase().startsWith("y")
+        // A route preview waiting for confirmation takes the answer first.
+        if (StartGate.pending.value != null) {
+            return if (yes) { StartGate.confirm(); "Starting." } else { StartGate.cancel(); "Okay, cancelled." }
+        }
+        if (RoutineManager.prompt.value == null) return "There is no question waiting."
         RoutineManager.answer(if (yes) PromptAnswer.YES else PromptAnswer.SNOOZE)
         return if (yes) "Thank you." else "Okay, I will come back later."
     }

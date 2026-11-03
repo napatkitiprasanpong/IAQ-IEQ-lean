@@ -101,8 +101,10 @@ object TemiRepository : OnRobotReadyListener,
                     charging = false,
                     locations = simLocations
                 )
+                TemiMapRepository.useSimulation()   // sample maps; also sets the locations of the simulated map
             } else {
                 _state.value = RobotState(simulated = false, ready = false)
+                TemiMapRepository.useReal()
                 attachReal()
             }
         }
@@ -111,6 +113,11 @@ object TemiRepository : OnRobotReadyListener,
     /** Call from Activity.onStart so temi keeps the app's top-bar shortcut state in sync. */
     fun onActivityStart() {
         if (_state.value.ready && !_state.value.simulated) registerWithLauncher()
+    }
+
+    /** Used by the simulated maps: the locations "saved on temi" change when another map is loaded. */
+    fun setLocations(locations: List<String>) {
+        _state.update { it.copy(locations = locations) }
     }
 
     fun refresh() {
@@ -192,6 +199,7 @@ object TemiRepository : OnRobotReadyListener,
         if (isReady) {
             registerWithLauncher()
             scope.launch { pollReal() }
+            TemiMapRepository.onRobotReady()
         } else {
             _state.update { it.copy(batteryPercent = null) }
         }
@@ -205,6 +213,7 @@ object TemiRepository : OnRobotReadyListener,
     ) {
         _state.update { it.copy(navLocation = location, navStatus = status) }
         _events.tryEmit(GoToEvent(location, status, descriptionId, description))
+        if (status == GoToStatus.COMPLETE || status == GoToStatus.ABORT) TemiMapRepository.clearNavPath()
     }
 
     override fun onLocationsUpdated(locations: List<String>) {
@@ -295,6 +304,7 @@ object TemiRepository : OnRobotReadyListener,
             delay(600)
             onGoToLocationStatusChanged(location, GoToStatus.GOING, 10007, "simulated")
             delay(3000)
+            TemiMapRepository.simArrived(location)
             onGoToLocationStatusChanged(location, GoToStatus.COMPLETE, 500, "simulated")
         }
     }

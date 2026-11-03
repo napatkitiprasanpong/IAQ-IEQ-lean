@@ -15,6 +15,12 @@ data class MissionRoute(val name: String, val waypoints: List<String>)
 /** IP address of the Raspberry Pi that publishes the sensor readings over MQTT. */
 const val DEFAULT_PI_HOST = "10.2.115.198"
 
+/** Topic the Raspberry Pi publishes its readings to (see RaspberryPi.py: pi/01/telemetry/iaq). */
+const val DEFAULT_MQTT_TOPIC = "pi/01/telemetry/iaq"
+
+/** The topic earlier versions of the app used as their default. A saved value equal to it is replaced. */
+private const val OLD_DEFAULT_MQTT_TOPIC = "iaq/sensors"
+
 const val DEFAULT_ROUTINE_MESSAGE = "Please drink water"
 
 /**
@@ -95,6 +101,18 @@ object AppSettings {
     /** Seconds the popup waits for an answer; no answer is treated like "Come back in N mins". */
     val routinePromptTimeoutSeconds = Setting("routine_prompt_timeout_s", 60)
 
+    /**
+     * Before an automatic (timed) start, predict the path on the map and do not start if a leg is
+     * predicted to be blocked. Manual starts always show the preview and let the person decide.
+     */
+    val previewBlockAuto = Setting("preview_block_auto", true)
+
+    // ---- map display (Map tab) ----
+    /** 0 = detect, 1 = temi's map data starts at the bottom row, 2 = it starts at the top row. */
+    val mapOrientation = Setting("map_orientation", 0)
+    /** 0 = detect, 1 = normal, 2 = swap free space and walls. */
+    val mapInvert = Setting("map_invert", 0)
+
     // ---- Google Sheets upload (IAQ-IEQ routine) ----
     /** URL of the deployed Google Apps Script web app (see apps_script/Code.gs). */
     val sheetsUrl = Setting("sheets_url", "")
@@ -105,7 +123,7 @@ object AppSettings {
     val simulateSensors = Setting("simulate_sensors", false)
     val mqttHost = Setting("mqtt_host", DEFAULT_PI_HOST)
     val mqttPort = Setting("mqtt_port", 1883)
-    val mqttTopic = Setting("mqtt_topic", "iaq/sensors")
+    val mqttTopic = Setting("mqtt_topic", DEFAULT_MQTT_TOPIC)
     val mqttUser = Setting("mqtt_user", "")
     val mqttPass = Setting("mqtt_pass", "")
 
@@ -124,11 +142,16 @@ object AppSettings {
 
         listOf(
             simulateRobot, selectedRoute, dwellSeconds, arrivalTimeoutSeconds, retries,
-            homeBase, returnHome, autoStart, routineSnoozeMinutes, routinePromptTimeoutSeconds, simulateSensors, mqttHost, mqttPort, mqttTopic, mqttUser, mqttPass, sheetsUrl, sheetsToken
+            homeBase, returnHome, autoStart, routineSnoozeMinutes, routinePromptTimeoutSeconds, simulateSensors, mqttHost, mqttPort, mqttTopic, mqttUser, mqttPass, sheetsUrl, sheetsToken,
+            previewBlockAuto, mapOrientation, mapInvert
         ).forEach { it.load(p) }
 
         // Earlier versions defaulted to the host name below; the Pi now has a fixed address.
         if (mqttHost.value.trim() == "raspberrypi.local") mqttHost.set(DEFAULT_PI_HOST)
+
+        // The default topic changed to pi/01/telemetry/iaq; an old saved default (or an empty one) follows it.
+        val savedTopic = mqttTopic.value.trim()
+        if (savedTopic.isEmpty() || savedTopic == OLD_DEFAULT_MQTT_TOPIC) mqttTopic.set(DEFAULT_MQTT_TOPIC)
 
         p.getString(KEY_ROUTES, null)?.let { _routes.value = routesFromJson(it) }
         p.getString(KEY_ROUTINES, null)?.let { _routines.value = routinesFromJson(it) }

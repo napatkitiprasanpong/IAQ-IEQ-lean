@@ -94,7 +94,7 @@ private fun noDataReason(link: SensorLinkState): String = when {
     !link.connected -> "Not connected to the Pi yet"
     link.messages == 0 ->
         "Connected, but nothing arrived on '${AppSettings.mqttTopic.value.trim()}'. " +
-            "On the Pi run: mosquitto_sub -t 'iaq/#' -v (is the publisher script running, and which topic does it use?)"
+            "On the Pi run: mosquitto_sub -t 'pi/#' -v (is the publisher script running, and which topic does it use?)"
     else -> "Messages arrive (${link.messages}) but none usable: ${link.problem.ifEmpty { "unknown" }}. Last: ${link.lastTopic} ${link.lastPayload}"
 }
 

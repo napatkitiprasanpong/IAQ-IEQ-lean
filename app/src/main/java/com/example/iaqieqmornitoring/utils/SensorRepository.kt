@@ -87,6 +87,7 @@ object SensorRepository {
     // ---- called by PiSensorClient ----
     internal fun publish(newData: SensorData, fieldsSeen: Set<String>) {
         _data.value = newData.copy(timestampMs = System.currentTimeMillis())
+        SensorHistory.add(_data.value)
         _link.update { it.copy(fields = it.fields + fieldsSeen) }
     }
 

@@ -25,6 +25,11 @@
             android:name="com.robotemi.sdk.metadata.SKILL"
             android:value="@string/app_name" />
 
+        <!-- Lets the Map tab and the route preview read temi's map (and the maps backed up on the temi cloud) -->
+        <meta-data
+            android:name="@string/metadata_permissions"
+            android:value="com.robotemi.permission.map" />
+
         <receiver
             android:name=".BootReceiver"
             android:enabled="true"

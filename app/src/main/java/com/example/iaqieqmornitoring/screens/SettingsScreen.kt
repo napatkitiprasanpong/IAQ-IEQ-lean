@@ -48,6 +48,7 @@ import com.example.iaqieqmornitoring.components.Stepper
 import com.example.iaqieqmornitoring.components.ToggleRow
 import com.example.iaqieqmornitoring.components.TopBar
 import com.example.iaqieqmornitoring.utils.AppSettings
+import com.example.iaqieqmornitoring.utils.DEFAULT_MQTT_TOPIC
 import com.example.iaqieqmornitoring.utils.MissionManager
 import com.example.iaqieqmornitoring.utils.MissionRoute
 import com.example.iaqieqmornitoring.utils.SensorRepository
@@ -407,9 +408,10 @@ private fun SensorLinkCard() {
                 modifier = Modifier.fillMaxWidth()
             )
             Text(
-                "The Pi should publish JSON to the topic, e.g.\n" +
-                    "{\"temp\":24.1,\"humidity\":55,\"co2\":620,\"pm25\":9,\"pm10\":14,\n" +
-                    " \"tvoc\":0.2,\"hcho\":0.02,\"light\":310,\"sound\":42}",
+                "Default topic: $DEFAULT_MQTT_TOPIC\n" +
+                    "The Pi should publish JSON to the topic, e.g.\n" +
+                    "{\"temp_c\":24.1,\"rh_pct\":55,\"co2_ppm\":620,\"pm25_ugm3\":9,\"pm10_ugm3\":14,\n" +
+                    " \"tvoc_ppb\":0.2,\"lux\":310,\"dba\":42}  (other key names such as temp, humidity, co2 also work)",
                 color = ColorMuted,
                 fontSize = 11.sp
             )

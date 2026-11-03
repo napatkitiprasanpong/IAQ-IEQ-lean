@@ -7,6 +7,7 @@ import androidx.navigation.NavType
 import androidx.navigation.compose.*
 import androidx.navigation.navArgument
 import com.example.iaqieqmornitoring.components.RoutinePromptHost
+import com.example.iaqieqmornitoring.components.RoutePreviewHost
 import com.example.iaqieqmornitoring.screens.*
 
 @Composable
@@ -39,8 +40,8 @@ fun AppNavigation() {
             AnalyticsScreen(nav)
         }
 
-        composable("mission") {
-            MissionScreen(nav)
+        composable("map") {
+            MapScreen(nav)
         }
 
         composable("routine") {
@@ -64,4 +65,7 @@ fun AppNavigation() {
 
     // Routine popup: shown on top of whichever screen is open.
     RoutinePromptHost()
+
+    // Route preview: every run (sudden mission, timed mission, custom routine) is shown on the map first.
+    RoutePreviewHost()
 }
